@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Sistema de Beneficiários</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Fonte e Ícones -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(to bottom right, #004080, #0074D9);
+    color: #fff;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 1000px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  }
+
+  h2 {
+    text-align: center;
+    color: #fff;
+    margin-bottom: 20px;
+  }
+
+  .screen {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  input, select {
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+  }
+
+  button {
+    background: #0056b3;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+  }
+
+  button:hover {
+    background: #003d80;
+  }
+
+  .menu-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+  }
+
+  .menu-buttons button {
+    width: 200px;
+    height: 80px;
+    font-size: 1.2rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+
+  table th, table td {
+    border: 1px solid #fff;
+    padding: 8px;
+    text-align: left;
+  }
+
+  table th {
+    background-color: rgba(255,255,255,0.2);
+  }
+
+  .download-btn {
+    margin-top: 10px;
+    background: #0080ff;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Tela Login -->
+  <div id="loginScreen" class="screen">
+    <h2><i class="fas fa-users"></i> Login</h2>
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="Usuário" required>
+      <input type="password" id="password" placeholder="Senha" required>
+      <button type="submit"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+    </form>
+    <p id="loginError" style="color: red; display: none;">Usuário ou senha inválidos!</p>
+  </div>
+
+  <!-- Menu -->
+  <div id="menuScreen" class="screen">
+    <h2><i class="fas fa-home"></i> Menu Principal</h2>
+    <div class="menu-buttons">
+      <button id="newCadastroBtn"><i class="fas fa-user-plus"></i> Novo Cadastro</button>
+      <button id="manageBtn"><i class="fas fa-list"></i> Gerenciar Beneficiários</button>
+      <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sair</button>
+    </div>
+  </div>
+
+  <!-- Formulário -->
+  <div id="formScreen" class="screen">
+    <h2><i class="fas fa-user-edit"></i> Cadastro de Beneficiário</h2>
+    <form id="beneficiaryForm">
+      <input type="text" id="nome" placeholder="Nome Completo" required>
+      <input type="date" id="dataNascimento" required>
+      <input type="number" id="idade" placeholder="Idade" required>
+      <input type="text" id="cpf" placeholder="CPF" required>
+      <input type="text" id="nis" placeholder="NIS" required>
+      <input type="text" id="endereco" placeholder="Endereço" required>
+      <select id="sexo" required>
+        <option value="">Sexo</option>
+        <option value="Masculino">Masculino</option>
+        <option value="Feminino">Feminino</option>
+      </select>
+      <input type="text" id="telefone" placeholder="Telefone" required>
+      <select id="grupo" required>
+        <option value="">Grupo</option>
+        <option value="Mulheres">Mulheres</option>
+        <option value="Idosos">Idosos</option>
+        <option value="Gestantes">Gestantes</option>
+        <option value="Homens">Homens</option>
+        <option value="BPC">BPC</option>
+      </select>
+      <button type="submit"><i class="fas fa-save"></i> Salvar</button>
+    </form>
+    <button id="backToMenuFromForm"><i class="fas fa-arrow-left"></i> Voltar</button>
+  </div>
+
+  <!-- Gerenciar -->
+  <div id="manageScreen" class="screen">
+    <h2><i class="fas fa-users-cog"></i> Gerenciar Beneficiários</h2>
+    <div id="tablesContainer"></div>
+    <button id="backToMenuFromManage"><i class="fas fa-arrow-left"></i> Voltar</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const loginScreen = document.getElementById('loginScreen');
+  const menuScreen = document.getElementById('menuScreen');
+  const formScreen = document.getElementById('formScreen');
+  const manageScreen = document.getElementById('manageScreen');
+
+  const loginForm = document.getElementById('loginForm');
+  const loginError = document.getElementById('loginError');
+
+  const newCadastroBtn = document.getElementById('newCadastroBtn');
+  const manageBtn = document.getElementById('manageBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  const beneficiaryForm = document.getElementById('beneficiaryForm');
+  const backToMenuFromForm = document.getElementById('backToMenuFromForm');
+  const backToMenuFromManage = document.getElementById('backToMenuFromManage');
+
+  const tablesContainer = document.getElementById('tablesContainer');
+
+  let beneficiaries = [];
+  const groups = ["Mulheres", "Idosos", "Gestantes", "Homens", "BPC"];
+
+  const showScreen = screen => {
+    [loginScreen, menuScreen, formScreen, manageScreen].forEach(s => s.style.display = 'none');
+    screen.style.display = 'block';
+  };
+
+  loginForm.addEventListener('submit', e => {
+    e.preventDefault();
+    if (document.getElementById('username').value === 'admin' && document.getElementById('password').value === '123456') {
+      showScreen(menuScreen);
+    } else {
+      loginError.style.display = 'block';
+    }
+  });
+
+  newCadastroBtn.addEventListener('click', () => showScreen(formScreen));
+  manageBtn.addEventListener('click', () => {
+    renderTables();
+    showScreen(manageScreen);
+  });
+  logoutBtn.addEventListener('click', () => showScreen(loginScreen));
+  backToMenuFromForm.addEventListener('click', () => showScreen(menuScreen));
+  backToMenuFromManage.addEventListener('click', () => showScreen(menuScreen));
+
+  beneficiaryForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const b = {
+      nome: document.getElementById('nome').value,
+      dataNascimento: document.getElementById('dataNascimento').value,
+      idade: document.getElementById('idade').value,
+      cpf: document.getElementById('cpf').value,
+      nis: document.getElementById('nis').value,
+      endereco: document.getElementById('endereco').value,
+      sexo: document.getElementById('sexo').value,
+      telefone: document.getElementById('telefone').value,
+      grupo: document.getElementById('grupo').value
+    };
+    beneficiaries.push(b);
+    beneficiaryForm.reset();
+    showScreen(menuScreen);
+  });
+
+  function renderTables() {
+    tablesContainer.innerHTML = '';
+    groups.forEach(group => {
+      const groupBeneficiaries = beneficiaries
+        .filter(b => b.grupo === group)
+        .sort((a, b) => a.nome.localeCompare(b.nome));
+
+      if (groupBeneficiaries.length > 0) {
+        const table = document.createElement('table');
+        table.innerHTML = `<thead><tr><th colspan="5">${group}</th></tr>
+          <tr><th>Nome</th><th>Idade</th><th>CPF</th><th>NIS</th><th>Telefone</th></tr></thead>
+          <tbody>${groupBeneficiaries.map(b => 
+            `<tr><td>${b.nome}</td><td>${b.idade}</td><td>${b.cpf}</td><td>${b.nis}</td><td>${b.telefone}</td></tr>`
+          ).join('')}</tbody>`;
+        
+        tablesContainer.appendChild(table);
+
+        const btn = document.createElement('button');
+        btn.className = 'download-btn';
+        btn.innerHTML = `<i class="fas fa-file-word"></i> Baixar ${group}`;
+        btn.onclick = () => exportToWord(group, table.outerHTML);
+        tablesContainer.appendChild(btn);
+      }
+    });
+  }
+
+  function exportToWord(groupName, tableHTML) {
+    const blob = new Blob([`<html><head><meta charset="UTF-8"></head><body>${tableHTML}</body></html>`],
+                          { type: 'application/msword' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${groupName}.doc`;
+    link.click();
+  }
+
+  showScreen(loginScreen);
+})();
+</script>
+</body>
+</html>
